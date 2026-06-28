@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Walking Calorie Burn Calculator — The Final Third</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f5f5f3;
+    --bg-tertiary: #eeede9;
+    --text-primary: #1a1a18;
+    --text-secondary: #5f5e5a;
+    --text-tertiary: #888780;
+    --border: rgba(0,0,0,0.12);
+    --border-mid: rgba(0,0,0,0.2);
+    --accent: #1d9e75;
+    --accent-light: #e1f5ee;
+    --accent-dark: #0f6e56;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg-secondary: #252523;
+      --bg-tertiary: #2e2e2b;
+      --text-primary: #f0efe9;
+      --text-secondary: #a8a79f;
+      --text-tertiary: #6e6d67;
+      --border: rgba(255,255,255,0.1);
+      --border-mid: rgba(255,255,255,0.18);
+      --accent: #1d9e75;
+      --accent-light: #04342c;
+      --accent-dark: #5dcaa5;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 1.5rem 1rem;
+    line-height: 1.6;
+  }
+
+  .page { max-width: 520px; margin: 0 auto; }
+
+  header { margin-bottom: 1.5rem; }
+  header h1 { font-size: 22px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
+  header p { font-size: 14px; color: var(--text-secondary); }
+
+  .card {
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 1rem;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 1rem;
+  }
+
+  .input-group:last-child { margin-bottom: 0; }
+
+  .input-group label {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .input-with-unit {
+    display: flex;
+    align-items: stretch;
+    border: 0.5px solid var(--border-mid);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .input-with-unit:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(29,158,117,0.15);
+  }
+
+  .input-with-unit input[type=number] {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 11px 14px;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: transparent;
+    width: 100%;
+    -moz-appearance: textfield;
+  }
+
+  .input-with-unit input[type=number]::-webkit-outer-spin-button,
+  .input-with-unit input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+  }
+
+  .input-unit {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    padding: 0 12px;
+    white-space: nowrap;
+    border-left: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    background: var(--bg-secondary);
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    min-height: 15px;
+  }
+
+  .pace-or {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0.5rem 0;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  .pace-or::before,
+  .pace-or::after {
+    content: '';
+    flex: 1;
+    height: 0.5px;
+    background: var(--border);
+  }
+
+  .divider {
+    border: none;
+    border-top: 0.5px solid var(--border);
+    margin: 1.25rem 0;
+  }
+
+  .calc-btn {
+    display: block;
+    width: 100%;
+    padding: 13px;
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 1.25rem;
+    letter-spacing: 0.01em;
+  }
+
+  .calc-btn:active { transform: scale(0.99); opacity: 0.9; }
+
+  .total-card {
+    background: var(--accent-light);
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--accent);
+    padding: 1.25rem;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .total-label { font-size: 14px; color: var(--accent-dark); }
+  .total-value { font-size: 38px; font-weight: 500; color: var(--text-primary); }
+  .total-unit { font-size: 14px; color: var(--text-secondary); }
+
+  .breakdown {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-bottom: 1.25rem;
+    min-height: 16px;
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .result-card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    border: 0.5px solid var(--border);
+  }
+
+  .rc-label {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .rc-value { font-size: 20px; font-weight: 500; color: var(--text-primary); line-height: 1.2; }
+  .rc-unit { font-size: 11px; color: var(--text-tertiary); }
+
+  .error {
+    font-size: 13px;
+    color: #a32d2d;
+    margin-top: 0.75rem;
+    display: none;
+    padding: 8px 12px;
+    background: #fcebeb;
+    border-radius: var(--radius-md);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .error { background: #2a1010; color: #f09595; }
+  }
+
+  .results-section { display: none; }
+  .results-section.visible { display: block; }
+
+  footer {
+    margin-top: 1.5rem;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    line-height: 1.7;
+  }
+
+  @media (min-width: 560px) {
+    .result-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+  <p style="font-size:11px; font-weight:500; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">The Final Third</p>
+    <h1>Walking Calorie Burn Calculator</h1>
+    <p>Want to know how many calories all that walking is burning?</p>
+    <p style="font-size:13px; color:var(--text-tertiary); margin-top:4px;">Enter your stats below — use steps/min or min/mile for pace, whichever you know.</p>
+  </header>
+
+  <div class="card">
+    <p class="section-title">Your stats</p>
+
+    <div class="input-group">
+      <label for="weight">Body weight</label>
+      <div class="input-with-unit">
+        <input type="number" id="weight" value="180" min="80" max="400" step="1">
+        <span class="input-unit">lbs</span>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label for="height">Height</label>
+      <div class="input-with-unit">
+        <input type="number" id="height" value="68" min="54" max="84" step="1" oninput="onHeightChange()">
+        <span class="input-unit">inches</span>
+      </div>
+      <span class="hint" id="height-hint">5′ 8″</span>
+    </div>
+
+    <div class="input-group">
+      <label for="duration">Duration</label>
+      <div class="input-with-unit">
+        <input type="number" id="duration" value="60" min="5" max="360" step="1">
+        <span class="input-unit">minutes</span>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <p class="section-title">Pace — enter either one</p>
+
+    <div class="input-group">
+      <label for="cadence">Steps per minute</label>
+      <div class="input-with-unit">
+        <input type="number" id="cadence" placeholder="e.g. 120" min="60" max="160" step="1" oninput="onCadenceChange()">
+        <span class="input-unit">spm</span>
+      </div>
+      <span class="hint" id="cadence-hint"></span>
+    </div>
+
+    <div class="pace-or">or</div>
+
+    <div class="input-group">
+      <label for="minmile">Minutes per mile</label>
+      <div class="input-with-unit">
+        <input type="number" id="minmile" placeholder="e.g. 20" min="10" max="45" step="0.5" oninput="onMinMileChange()">
+        <span class="input-unit">min/mi</span>
+      </div>
+      <span class="hint" id="minmile-hint"></span>
+    </div>
+
+    <hr class="divider">
+    <p class="section-title">Terrain & load</p>
+
+    <div class="input-group">
+      <label for="elev">Elevation gain</label>
+      <div class="input-with-unit">
+        <input type="number" id="elev" value="0" min="0" max="6000" step="10">
+        <span class="input-unit">feet</span>
+      </div>
+      <span class="hint">0 = flat walk</span>
+    </div>
+
+    <div class="input-group">
+      <label for="ruck">Ruck / pack weight</label>
+      <div class="input-with-unit">
+        <input type="number" id="ruck" value="0" min="0" max="100" step="1">
+        <span class="input-unit">lbs</span>
+      </div>
+      <span class="hint">0 = no pack</span>
+    </div>
+
+    <p class="error" id="error-msg">Please check your inputs — make sure weight, height, duration and at least one pace field are filled in.</p>
+    <button class="calc-btn" onclick="calc()">Calculate</button>
+  </div>
+
+  <div class="card results-section" id="results-card">
+    <p class="section-title">Results</p>
+
+    <div class="total-card">
+      <span class="total-label">Total burn</span>
+      <span class="total-value" id="total">—</span>
+      <span class="total-unit">kcal</span>
+    </div>
+
+    <p class="breakdown" id="breakdown"></p>
+
+    <div class="result-grid">
+      <div class="result-card">
+        <p class="rc-label">Distance</p>
+        <p class="rc-value" id="r-dist">—</p>
+        <span class="rc-unit">miles</span>
+      </div>
+      <div class="result-card">
+        <p class="rc-label">Total steps</p>
+        <p class="rc-value" id="r-steps">—</p>
+        <span class="rc-unit">steps</span>
+      </div>
+      <div class="result-card">
+        <p class="rc-label">Steps/min</p>
+        <p class="rc-value" id="r-spm">—</p>
+        <span class="rc-unit">spm</span>
+      </div>
+      <div class="result-card">
+        <p class="rc-label">Min/mile</p>
+        <p class="rc-value" id="r-mpm">—</p>
+        <span class="rc-unit">min/mi</span>
+      </div>
+      <div class="result-card">
+        <p class="rc-label">Base walking</p>
+        <p class="rc-value" id="r-base">—</p>
+        <span class="rc-unit">kcal</span>
+      </div>
+      <div class="result-card">
+        <p class="rc-label">Elevation add</p>
+        <p class="rc-value" id="r-elev">—</p>
+        <span class="rc-unit">kcal</span>
+      </div>
+      <div class="result-card">
+        <p class="rc-label">Ruck add</p>
+        <p class="rc-value" id="r-ruck">—</p>
+        <span class="rc-unit">kcal</span>
+      </div>
+      <div class="result-card">
+        <p class="rc-label">Per hour rate</p>
+        <p class="rc-value" id="r-rate">—</p>
+        <span class="rc-unit">kcal/hr</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+  <p style="font-size:12px; color:var(--text-secondary); margin-bottom:1rem; padding-bottom:1rem; border-bottom:0.5px solid var(--border);">Regaining your health after 55. Tools, insights and honest notes on movement, nutrition and getting stronger in Life's Final Third.</p>
+    <p>Stride length estimated from height (×0.413). When entering min/mile, cadence is derived from stride and speed. Calories use MET values for pace with additive adjustments for elevation and pack weight. Error bars ±15%.</p>
+    <p style="margin-top:0.5rem;">Typical cadence: easy stroll 90–100 · moderate 110–120 · brisk 125–135 · fast 135–145 spm.</p>
+  </footer>
+
+</div>
+
+<script>
+function heightLabel(i) {
+  return Math.floor(i/12) + '\u2032 ' + (i%12) + '\u2033';
+}
+
+function strideFt(h) { return h * 0.413 / 12; }
+
+function metForMPH(mph) {
+  if (mph < 2.0) return 2.0;
+  if (mph < 2.5) return 2.8;
+  if (mph < 3.0) return 3.0;
+  if (mph < 3.5) return 3.5;
+  if (mph < 4.0) return 4.3;
+  if (mph < 4.5) return 5.0;
+  if (mph < 5.0) return 6.0;
+  return 7.0;
+}
+
+function paceLabel(mph) {
+  if (mph < 2.0) return 'very slow';
+  if (mph < 2.5) return 'easy stroll';
+  if (mph < 3.2) return 'moderate walk';
+  if (mph < 3.8) return 'brisk walk';
+  if (mph < 4.5) return 'fast walk';
+  return 'very fast walk';
+}
+
+function cadenceLabel(spm) {
+  if (spm < 90)  return 'very slow';
+  if (spm < 105) return 'easy stroll';
+  if (spm < 118) return 'moderate';
+  if (spm < 128) return 'brisk';
+  if (spm < 140) return 'fast';
+  return 'very fast';
+}
+
+function getHeight() { return parseFloat(document.getElementById('height').value) || 68; }
+
+function onHeightChange() {
+  var h = getHeight();
+  document.getElementById('height-hint').textContent = heightLabel(h);
+  var spm = parseFloat(document.getElementById('cadence').value);
+  if (spm) syncMinMile(spm, h);
+}
+
+function onCadenceChange() {
+  var spm = parseFloat(document.getElementById('cadence').value);
+  var h = getHeight();
+  document.getElementById('cadence-hint').textContent = spm ? cadenceLabel(spm) : '';
+  if (spm >= 60 && spm <= 160) {
+    syncMinMile(spm, h);
+  } else {
+    document.getElementById('minmile').value = '';
+    document.getElementById('minmile-hint').textContent = '';
+  }
+}
+
+function onMinMileChange() {
+  var mpm = parseFloat(document.getElementById('minmile').value);
+  var h = getHeight();
+  if (mpm >= 10 && mpm <= 45) {
+    var mph = 60 / mpm;
+    var spm = Math.round(mph * 5280 / (strideFt(h) * 60));
+    document.getElementById('cadence').value = spm;
+    document.getElementById('cadence-hint').textContent = cadenceLabel(spm);
+    document.getElementById('minmile-hint').textContent = paceLabel(mph);
+  } else {
+    document.getElementById('cadence').value = '';
+    document.getElementById('cadence-hint').textContent = '';
+    document.getElementById('minmile-hint').textContent = '';
+  }
+}
+
+function syncMinMile(spm, h) {
+  var mph = (spm * strideFt(h) * 60) / 5280;
+  var mpm = 60 / mph;
+  document.getElementById('minmile').value = mpm.toFixed(1);
+  document.getElementById('minmile-hint').textContent = paceLabel(mph);
+}
+
+function mpmDisplay(minPerMile) {
+  var m = Math.floor(minPerMile);
+  var s = Math.round((minPerMile - m) * 60);
+  if (s === 60) { m++; s = 0; }
+  return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function calc() {
+  var weight   = parseFloat(document.getElementById('weight').value);
+  var heightIn = parseFloat(document.getElementById('height').value);
+  var cadence  = parseFloat(document.getElementById('cadence').value);
+  var duration = parseFloat(document.getElementById('duration').value);
+  var elev     = parseFloat(document.getElementById('elev').value) || 0;
+  var ruck     = parseFloat(document.getElementById('ruck').value) || 0;
+
+  var err = document.getElementById('error-msg');
+  if (!weight || !heightIn || !cadence || !duration ||
+      weight < 80 || heightIn < 54 || heightIn > 84 ||
+      cadence < 60 || cadence > 160 || duration < 5) {
+    err.style.display = 'block'; return;
+  }
+  err.style.display = 'none';
+
+  var wKg   = weight * 0.453592;
+  var hours = duration / 60;
+  var steps = Math.round(cadence * duration);
+  var miles = (steps * strideFt(heightIn)) / 5280;
+  var mph   = miles / hours;
+  var mpm   = duration / miles;
+
+  var base  = Math.round(metForMPH(mph) * wKg * hours);
+  var eKcal = Math.round((elev / 100) * wKg * 0.11);
+  var rFrac = ruck > 0 ? (ruck / weight) * 0.75 : 0;
+  var rKcal = Math.round(base * rFrac);
+  var total = base + eKcal + rKcal;
+
+  document.getElementById('total').textContent    = total.toLocaleString();
+  document.getElementById('r-dist').textContent   = miles.toFixed(1);
+  document.getElementById('r-steps').textContent  = steps.toLocaleString();
+  document.getElementById('r-spm').textContent    = Math.round(cadence);
+  document.getElementById('r-mpm').textContent    = mpmDisplay(mpm);
+  document.getElementById('r-base').textContent   = base.toLocaleString();
+  document.getElementById('r-elev').textContent   = eKcal.toLocaleString();
+  document.getElementById('r-ruck').textContent   = rKcal.toLocaleString();
+  document.getElementById('r-rate').textContent   = Math.round(total / hours).toLocaleString();
+
+  document.getElementById('breakdown').textContent =
+    mph.toFixed(1) + ' mph \u00b7 ' + paceLabel(mph) +
+    (ruck > 0 ? ' \u00b7 ' + ruck + 'lb pack +' + Math.round(rFrac * 100) + '% load' : '') +
+    (elev > 0 ? ' \u00b7 ' + elev + 'ft elevation' : '');
+
+  document.getElementById('results-card').classList.add('visible');
+}
+
+document.getElementById('height-hint').textContent = heightLabel(68);
+document.addEventListener('keydown', function(e) { if (e.key === 'Enter') calc(); });
+</script>
+</body>
+</html>
