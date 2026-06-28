@@ -8,7 +8,6 @@ At 55 I had spent the first two thirds of my life getting fat, sedentary and fun
 
 Simple to use tools that can answer some useful questions.
 
-- [Walking Calorie Burn Calculator](https://the-final-third.github.io/walking-calorie-burn-calculator.html) — estimates calories, distance and steps from pace, weight, elevation and pack weight.
 
 ---
 
